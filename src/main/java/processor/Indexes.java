@@ -7,7 +7,7 @@ import java.io.RandomAccessFile;
 import utility.*;
 
 public class Indexes {
-	private Map<String, Term> lookupTable;
+	private Map<String, PostingList> lookupTable;
 	private Map<String, List<Integer>> playId2DocId;
 	private Map<Integer, DocStat> docId2DocStat;
 	
@@ -16,9 +16,10 @@ public class Indexes {
 	private int numDoc;
 	private long numTokens;
 	private Scorer scorer;
+	private boolean languageModel;
 	
 	public Indexes(JsonParser jp, VByte vb) {
-		scorer = new Scorer();
+		scorer = new RawCount();
 		vocabulary = 0;
 		numDoc = 0;
 		numTokens = 0;
@@ -26,14 +27,14 @@ public class Indexes {
 		jp.readLookupTable(this);
 		playId2DocId = jp.readPlayId2DocId();
 		docId2DocStat = jp.readDocId2DocStat();
-		forHW1Report();
+		//forHW1Report();
 	}
 	
-	public void setLookupTable(Map<String, Term> lt) {
+	public void setLookupTable(Map<String, PostingList> lt) {
 		lookupTable = lt;
 	}
 	
-	public Map<String, Term> getLookupTable(){
+	public Map<String, PostingList> getLookupTable(){
 		return lookupTable;
 	}
 	
@@ -62,15 +63,15 @@ public class Indexes {
 				longPlay = entry.getKey();
 			}
 		}
-		System.out.printf("average length of a scene is: %d \n", sceneLenSum/numDoc);
+		System.out.printf("average length of a scene is: %f \n", (double)sceneLenSum/numDoc);
 		System.out.printf("shortest scene is %s, with length %d \n", shortScene, shortestScene);
 		System.out.printf("longest play is %s, with length %d \n", longPlay, longesPlay);
 		System.out.printf("shortest play is %s, with length %d \n", shortPlay, shortestPlay);
 	}
 	
-	public Term getTerm(String q) {
-		Term res = null;
-		Term t = lookupTable.get(q);
+	public PostingList getTerm(String q) {
+		PostingList res = null;
+		PostingList t = lookupTable.get(q);
 		
 		boolean encode = vb.isEncode();
 		
@@ -82,7 +83,7 @@ public class Indexes {
 			String filename = encode ? "data/binaryFileVByte" : "data/binaryFile";
 			RandomAccessFile disk = new RandomAccessFile(filename, "r");
 			
-			res = new Term(t);
+			res = new PostingList(t);
 			disk.seek(t.getOffset());
 			byte[] data = new byte[t.getBytes()];
 			//System.out.println(data.length);
@@ -116,43 +117,70 @@ public class Indexes {
 		return res;
 	}
 	
-	public List<Integer> query(String[] queries, int k){
+	public List<RankResult> query(String queries, int k){
+		return query(queries.split("\\s+"), k);
+	}
+	
+	public List<RankResult> query(String[] queries, int k){
 		//String[] queries = Q.split("\\s+");
-		List<Integer> res = new ArrayList<Integer>(k);
-		List<Term> terms = new ArrayList<Term>(queries.length);
+		List<RankResult> res = new ArrayList<RankResult>(k);
+		List<PostingList> terms = new ArrayList<PostingList>(queries.length);
+		Map<String, Integer> qtf = new HashMap<String, Integer>();
 		for(String s : queries) {
 			terms.add(getTerm(s));
+			qtf.put(s, qtf.getOrDefault(s, 0)+1);
 		}
-		PriorityQueue<int[]> pq = new PriorityQueue<int[]>(k+1, new Comparator<int[]>() {
-			public int compare(int[] a, int[] b) {
-				return a[1]-b[1];
+
+		PriorityQueue<Rank> pq = new PriorityQueue<Rank>(k+1, new Comparator<Rank>() {
+			public int compare(Rank a, Rank b) {
+				if(a.score<b.score) return -1;
+				else if(a.score>b.score) return 1;
+				return 0;
 			}
 		});
 		int[] pointers = new int[queries.length];
 		
 		for(int i=1; i<numDoc; i++) {
 			boolean finished = true;
-			int score = 0;
+			double score = 0.0;
+			int docLen = docId2DocStat.get(i).getLength();
 			for(int j=0; j<pointers.length; j++) {
-				Postings cur = terms.get(j).skipToDoc(pointers, j, i);
+				PostingList term = terms.get(j);
+				int tf = term.getCount(), numOfDoc = term.getDocCount();
+				Postings cur = term.skipToDoc(pointers, j, i);
+				int queryTermFreq = qtf.get(queries[j]);
 				if(cur!=null) {
 					finished = false;
 					if(cur.getDocId()==i) {
 						//System.out.println(cur.getCount());
-						score += scorer.g_RawCount(queries)*scorer.f_RawCount(cur);
+						score += scorer.computeScore(tf, queryTermFreq, cur.getCount(), 
+								docLen, numDoc, (int)numTokens,numOfDoc);
+					}else if(languageModel) {
+						score += scorer.computeScore(tf, queryTermFreq, 0, 
+								docLen, numDoc, (int)numTokens, numOfDoc);
 					}
+				}else if(languageModel) {
+					score += scorer.computeScore(tf, queryTermFreq, 0, 
+							docLen, numDoc, (int)numTokens, numOfDoc);
 				}
 			}
-			if(score>0) pq.add(new int[] {i, score});
+			if(score!=0) pq.add(new Rank(score, i));
 			if(pq.size()>k)
 				pq.poll();
 			if(finished) break;
 		}
 		while(!pq.isEmpty()) {
-			res.add(pq.poll()[0]);
+			Rank cur = pq.poll();
+			res.add(new RankResult(cur.score, docId2DocStat.get(cur.docId)));
 		}
 		Collections.reverse(res);
 		return res;
+	}
+	
+	public void setScorer(Scorer s, boolean lan) {
+		this.scorer = s;
+		this.languageModel = lan;
+		System.out.printf("Set scorer as %s, %b\n", s.toString(), languageModel);
 	}
 	
 	public int getVocabulary() {
@@ -182,5 +210,15 @@ public class Indexes {
 	
 	public void setNumTokens(long x) {
 		numTokens = x;
+	}
+	
+	class Rank{
+		public double score;
+		public int docId;
+		
+		Rank(double s, int d){
+			score = s;
+			docId = d;
+		}
 	}
 }

@@ -21,26 +21,26 @@ public class Main {
 
 		Indexes ind = new Indexes(jp, vb);
 		
-		Test test = new Test(ind, il);
-		int k = 10;
-		if(args.length>1) {
-			k = Integer.parseInt(args[1]);
-		}
-		test.doTheTest(k);
-		
-		if(args.length>2) {
-			isLookUpTableWork(il, ind);
-			isQueryWork(il, ind);
-			//test.findClosestTerm("pullet");
-		}
+//		HW1 test = new HW1(ind, il);
+//		int k = 10;
+//		if(args.length>1) {
+//			k = Integer.parseInt(args[1]);
+//		}
+//		test.doTheTest(k);
+//		
+//		if(args.length>2) {
+//			isLookUpTableWork(il, ind);
+//			isQueryWork(il, ind);
+//			//test.findClosestTerm("pullet");
+//		}
 		
 	}
 	
 	public static void isQueryWork(InvertedList il, Indexes ind) {
 		System.out.println("testing is retrived term is correct...");
 		String testTerm = "street";
-		Term t1 = ind.getTerm(testTerm);
-		Term t2 = il.getTerms().get(testTerm);
+		PostingList t1 = ind.getTerm(testTerm);
+		PostingList t2 = il.getTerms().get(testTerm);
 		System.out.printf("test term: %s \n", testTerm);
 		System.out.printf("offset: %d | %d\n", t1.getOffset(), t2.getOffset());
 		System.out.printf("docCount: %d | %d\n", t1.getDocCount(), t2.getDocCount());
@@ -60,9 +60,9 @@ public class Main {
 		boolean match = true;
 		if(ind.getLookupTable().size()!=il.getTerms().size())
 			match = false;
-		for(Map.Entry<String, Term> entry : ind.getLookupTable().entrySet()){
-			Term x = entry.getValue();
-			Term y = il.getTerms().get(entry.getKey());
+		for(Map.Entry<String, PostingList> entry : ind.getLookupTable().entrySet()){
+			PostingList x = entry.getValue();
+			PostingList y = il.getTerms().get(entry.getKey());
 			if(x.getOffset()!=y.getOffset() || x.getCount()!=y.getCount() || x.getDocCount()!=y.getDocCount()) {
 				match = false;
 				break;

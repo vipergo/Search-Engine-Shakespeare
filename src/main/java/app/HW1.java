@@ -9,12 +9,12 @@ import constructor.*;
 import processor.*;
 import utility.*;
 
-public class Test {
+public class HW1 {
 	List<String> vocabularyList;
 	Indexes ind;
 	InvertedList il;
 	
-	public Test(Indexes ind, InvertedList il) {
+	public HW1(Indexes ind, InvertedList il) {
 		vocabularyList = ind.getVocabularyList();
 		this.ind = ind;
 		this.il = il;
@@ -117,11 +117,11 @@ public class Test {
 	}
 	
 	public String findClosestTerm(String a) {
-		Term x = ind.getTerm(a);
+		PostingList x = ind.getTerm(a);
 		double max = 0.0;
 		String res = "";
 		for(String s : vocabularyList) {
-			Term y = il.getTerm(s);
+			PostingList y = il.getTerm(s);
 			double cur = diceCoefficient(x, y);
 			if(cur>max) {
 				max = cur;
@@ -132,7 +132,7 @@ public class Test {
 		return res;
 	}
 	
-	public double diceCoefficient(Term t1, Term t2) {
+	public double diceCoefficient(PostingList t1, PostingList t2) {
 		int na = t1.getCount(), nb = t2.getCount(), nba = 0;
 		List<Postings> pl =  t1.getPList();
 		for(Postings p : pl) {

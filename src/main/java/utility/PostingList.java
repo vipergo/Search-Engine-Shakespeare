@@ -3,18 +3,18 @@ package utility;
 import java.util.List;
 import java.util.ArrayList;
 
-public class Term {
+public class PostingList {
 	private long offset = 0;
 	private int numBytes = 0;
 	private int docCount = 0;
 	private int count = 0;
 	private List<Postings> postings;
 	
-	public Term() {
+	public PostingList() {
 		postings = new ArrayList<Postings>();
 	}
 	
-	public Term(long off, int b, int dc, int c) {
+	public PostingList(long off, int b, int dc, int c) {
 		postings = new ArrayList<Postings>();
 		offset = off;
 		numBytes = b;
@@ -22,7 +22,7 @@ public class Term {
 		count = c;
 	}
 	
-	public Term(Term t2) {
+	public PostingList(PostingList t2) {
 		offset = t2.getOffset();
 		docCount = t2.getDocCount();
 		count = t2.getCount();
@@ -79,7 +79,7 @@ public class Term {
 		numBytes = x;
 	}
 	
-	public boolean isEqual(Term t) {
+	public boolean isEqual(PostingList t) {
 		if(offset!=t.getOffset() || docCount!=t.getDocCount() || count!=t.getCount())
 			return false;
 		List<Postings> tpl = t.getPList();

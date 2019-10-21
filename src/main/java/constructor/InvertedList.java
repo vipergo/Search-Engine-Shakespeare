@@ -12,13 +12,13 @@ public class InvertedList {
 	private Map<String, List<Integer>> playId2DocId;
 	private Map<Integer, DocStat> docId2DocStat;
 	
-	private Map<String, Term> terms;
+	private Map<String, PostingList> terms;
 	private int vocabulary = 0;
 	private int numDoc = 0;
 	private long numTokens = 0;
 	
 	public InvertedList(){
-		terms = new HashMap<String, Term>(20000);
+		terms = new HashMap<String, PostingList>(20000);
 		playId2DocId = new HashMap<String, List<Integer>>(800);
 		docId2DocStat = new HashMap<Integer, DocStat>(1000);
 		//Need to separate construct() and object constructor
@@ -40,17 +40,17 @@ public class InvertedList {
 				if(t.length()==0) continue;
 				count++;
 				if(!terms.containsKey(t))
-					terms.put(t, new Term());
+					terms.put(t, new PostingList());
 				terms.get(t).addPos(d.getDocId(), count);
 				numTokens++;
 			}
 			
-			String pid = d.getPlayId(); int docId = d.getDocId();
+			String pid = d.getPlayId(), sid = d.getSceneId(); int docId = d.getDocId();
 			if(!playId2DocId.containsKey(pid)) {
 				playId2DocId.put(pid, new ArrayList<Integer>());
 			}
 			playId2DocId.get(pid).add(docId);
-			docId2DocStat.put(docId, new DocStat(d));
+			docId2DocStat.put(docId, new DocStat(pid, sid, docId, count));
 		}
 		vocabulary = terms.size();
 		printStat();
@@ -80,11 +80,11 @@ public class InvertedList {
 		return numTokens;
 	}
 	
-	public Map<String, Term> getTerms(){
+	public Map<String, PostingList> getTerms(){
 		return terms;
 	}
 	
-	public Term getTerm(String s) {
+	public PostingList getTerm(String s) {
 		return terms.get(s);
 	}
 	
@@ -108,8 +108,8 @@ public class InvertedList {
 		try {
 			RandomAccessFile disk = new RandomAccessFile("data/binaryFile", "rw");
 			//long offset = 0;
-			for(Map.Entry<String,Term> entry : terms.entrySet()) {
-				Term pl = entry.getValue();
+			for(Map.Entry<String,PostingList> entry : terms.entrySet()) {
+				PostingList pl = entry.getValue();
 				
 				pl.setOffset(disk.getFilePointer()); //for lookup table
 				List<Postings> postings = pl.getPList();
@@ -141,8 +141,8 @@ public class InvertedList {
 		try {
 			RandomAccessFile disk = new RandomAccessFile("data/binaryFileVByte", "rw");
 			//long offset = 0;
-			for(Map.Entry<String,Term> entry : terms.entrySet()) {
-				Term pl = entry.getValue();
+			for(Map.Entry<String,PostingList> entry : terms.entrySet()) {
+				PostingList pl = entry.getValue();
 				
 				pl.setOffset(disk.getFilePointer()); //for lookup table
 				List<Postings> postings = pl.getPList();

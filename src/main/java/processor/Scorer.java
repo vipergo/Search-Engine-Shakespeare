@@ -1,13 +1,6 @@
 package processor;
 
-import utility.*;
-
-public class Scorer {
-	public int g_RawCount(String[] Q) {
-		return 1;
-	}
-	
-	public int f_RawCount(Postings l) {
-		return l.getCount();
-	}
+public interface Scorer {
+	public double computeScore(int tf, int queryTermFreq, int docTermFreq, 
+			int docLen, int totalDoc, int numTokens, int numOfDoc);
 }

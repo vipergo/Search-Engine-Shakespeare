@@ -51,7 +51,7 @@ public class JsonParser {
 	}
 	
 	public void write(InvertedList il) {
-		Map<String, Term> terms = il.getTerms();
+		Map<String, PostingList> terms = il.getTerms();
 		try{
 			JsonWriter writer = new JsonWriter(new FileWriter("data/lookupTable.json", false));
             
@@ -60,11 +60,11 @@ public class JsonParser {
 			writer.name("numDoc").value(il.getNumDoc());
 			writer.name("numTokens").value(il.getNumTokens());
 			
-			for(Map.Entry<String, Term> entry : terms.entrySet()) {
+			for(Map.Entry<String, PostingList> entry : terms.entrySet()) {
 				writer.name(entry.getKey());
 				writer.beginObject();
 				
-				Term pl = entry.getValue();
+				PostingList pl = entry.getValue();
 				//System.out.println(pl.getOffset());
 				writer.name("offset").value(pl.getOffset());
 				writer.name("bytes").value(pl.getBytes());
@@ -85,7 +85,7 @@ public class JsonParser {
 	
 	public void readLookupTable(Indexes ind){
 		System.out.println("Building index lookup table...");
-		Map<String, Term> res = new HashMap<String, Term>();
+		Map<String, PostingList> res = new HashMap<String, PostingList>();
 		try {
 			JsonReader jsonReader = new JsonReader(new FileReader("data/lookupTable.json"));
 			jsonReader.beginObject();
@@ -111,7 +111,7 @@ public class JsonParser {
 		    	int count = jsonReader.nextInt();
 		    	jsonReader.endObject();
 		    	
-		    	res.put(t, new Term(offset, bytes, docCount, count));
+		    	res.put(t, new PostingList(offset, bytes, docCount, count));
 			}
 			
 			jsonReader.endObject();
