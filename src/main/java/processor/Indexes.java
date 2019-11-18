@@ -1,6 +1,10 @@
 package processor;
 
 import java.util.*;
+
+import processor.scorer.RawCount;
+import processor.scorer.Scorer;
+
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
@@ -117,6 +121,10 @@ public class Indexes {
 		return res;
 	}
 	
+	public DocStat getDocStat(int docId) {
+		return docId2DocStat.get(docId);
+	}
+	
 	public List<RankResult> query(String queries, int k){
 		return query(queries.split("\\s+"), k);
 	}
@@ -192,6 +200,10 @@ public class Indexes {
 		return res;
 	}
 	
+	public int getDocLen(int docId) {
+		return docId2DocStat.get(docId).getLength();
+	}
+	
 	public void setVocabulary(int x) {
 		vocabulary = x;
 	}
@@ -210,15 +222,5 @@ public class Indexes {
 	
 	public void setNumTokens(long x) {
 		numTokens = x;
-	}
-	
-	class Rank{
-		public double score;
-		public int docId;
-		
-		Rank(double s, int d){
-			score = s;
-			docId = d;
-		}
 	}
 }

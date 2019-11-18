@@ -1,4 +1,4 @@
-package processor;
+package processor.scorer;
 
 public class BM25 implements Scorer {
 	public double k1 = 1.2;

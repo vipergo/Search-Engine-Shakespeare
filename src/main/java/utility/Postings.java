@@ -25,6 +25,11 @@ public class Postings {
 		return pos;
 	}
 	
+	public int getPosition(int i) {
+		if(i>=pos.size()) return -1;
+		return pos.get(i);
+	}
+	
 	public void add(int p) {
 		pos.add(p);
 	}

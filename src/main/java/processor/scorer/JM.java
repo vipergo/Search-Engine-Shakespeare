@@ -1,4 +1,4 @@
-package processor;
+package processor.scorer;
 
 import utility.PostingList;
 import utility.Postings;

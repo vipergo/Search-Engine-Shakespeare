@@ -29,6 +29,10 @@ public class PostingList {
 		postings = t2.getPList();
 	}
 	
+	public PLIterator getPLIterator() {
+		return new PLIterator(this);
+	}
+	
 	public void addPos(int docId, int p){
 		
 		if(postings.size()==0 

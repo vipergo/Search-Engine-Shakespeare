@@ -1,6 +1,10 @@
 package app;
 
 import processor.*;
+import processor.scorer.BM25;
+import processor.scorer.Diri;
+import processor.scorer.JM;
+import processor.scorer.Scorer;
 import utility.*;
 import constructor.InvertedList;
 import java.util.List;
@@ -37,10 +41,10 @@ public class HW2 {
 		};
 		//test(ind, bm25, queries, k, false);
 		//test(ind, JM, queries, k, true);
-		///test(ind, Dir, queries, k, true);
-		writeFile(test(ind, bm25, queries, k, false), "../bm25.trecrun");
-		writeFile(test(ind, JM, queries, k, true), "../ql-jm.trecrun");
-		writeFile(test(ind, Dir, queries, k, true), "../ql-dir.trecrun");
+		test(ind, Dir, queries, k, true);
+//		writeFile(test(ind, bm25, queries, k, false), "../bm25.trecrun");
+//		writeFile(test(ind, JM, queries, k, true), "../ql-jm.trecrun");
+//		writeFile(test(ind, Dir, queries, k, true), "../ql-dir.trecrun");
 	}
 	
 	public static String[][] test(Indexes ind, Scorer scorer, String[] queries, int k, boolean lm) {

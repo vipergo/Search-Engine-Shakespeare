@@ -1,4 +1,4 @@
-package processor;
+package processor.scorer;
 
 public interface Scorer {
 	public double computeScore(int tf, int queryTermFreq, int docTermFreq, 
