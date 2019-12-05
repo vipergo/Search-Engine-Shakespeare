@@ -211,5 +211,51 @@ public class JsonParser {
         }
 		return res;
 	}
+	
+	public void writeDocId2DocVec(Map<Integer, DocVec> docId2DocVec) {
+		try {
+			JsonWriter writer = new JsonWriter(new FileWriter("data/docId2DocVec.json", false));
+			writer.beginObject();
+			for(Map.Entry<Integer, DocVec> entry : docId2DocVec.entrySet()) {
+				writer.name(entry.getKey().toString());
+				DocVec x = entry.getValue();
+				writer.beginObject();
+				Map<String, Double> vec = x.getVec();
+				for(Map.Entry<String, Double> item : vec.entrySet()) {
+					writer.name(item.getKey()).value(item.getValue());
+				}
+				writer.endObject();
+			}
+			writer.endObject();
+			writer.close();
+		}catch (IOException e) {
+            e.printStackTrace();
+        }
+	}
+	
+	public Map<Integer, DocVec> readDocId2DocVec() {
+		Map<Integer, DocVec> res = new HashMap<Integer, DocVec>();
+		try {
+			JsonReader reader = new JsonReader(new FileReader("data/docId2DocVec.json"));
+			reader.beginObject();
+			while(reader.hasNext()) {
+				int docId = Integer.parseInt(reader.nextName());
+				DocVec dv = new DocVec(docId);
+				reader.beginObject();
+				while(reader.hasNext()) {
+					String s = reader.nextName();
+					Double doub = reader.nextDouble();
+					dv.put(s, doub);
+				}
+				reader.endObject();
+				res.put(docId, dv);
+			}
+			reader.endObject();
+			reader.close();
+		}catch (IOException e) {
+            e.printStackTrace();
+        }
+		return res;
+	}
 }
 

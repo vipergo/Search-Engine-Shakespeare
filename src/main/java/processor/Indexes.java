@@ -14,6 +14,7 @@ public class Indexes {
 	private Map<String, PostingList> lookupTable;
 	private Map<String, List<Integer>> playId2DocId;
 	private Map<Integer, DocStat> docId2DocStat;
+	private Map<Integer, DocVec> docId2DocVec;
 	
 	private VByte vb;
 	private int vocabulary;
@@ -31,6 +32,7 @@ public class Indexes {
 		jp.readLookupTable(this);
 		playId2DocId = jp.readPlayId2DocId();
 		docId2DocStat = jp.readDocId2DocStat();
+		docId2DocVec = jp.readDocId2DocVec();
 		//forHW1Report();
 	}
 	
@@ -129,6 +131,10 @@ public class Indexes {
 		return query(queries.split("\\s+"), k);
 	}
 	
+	public Map<Integer, DocVec> getDocId2DocVec() {
+		return docId2DocVec;
+	}
+	
 	public List<RankResult> query(String[] queries, int k){
 		//String[] queries = Q.split("\\s+");
 		List<RankResult> res = new ArrayList<RankResult>(k);
@@ -210,6 +216,10 @@ public class Indexes {
 	
 	public int getNumDoc() {
 		return numDoc;
+	}
+	
+	public int getTDF(String s) {
+		return lookupTable.get(s).getDocCount();
 	}
 	
 	public void setNumDoc(int x) {

@@ -12,6 +12,8 @@ public class InvertedList {
 	private Map<String, List<Integer>> playId2DocId;
 	private Map<Integer, DocStat> docId2DocStat;
 	
+	private Map<Integer, DocVec> docId2DocVec;
+	
 	private Map<String, PostingList> terms;
 	private int vocabulary = 0;
 	private int numDoc = 0;
@@ -21,6 +23,7 @@ public class InvertedList {
 		terms = new HashMap<String, PostingList>(20000);
 		playId2DocId = new HashMap<String, List<Integer>>(800);
 		docId2DocStat = new HashMap<Integer, DocStat>(1000);
+		docId2DocVec = new HashMap<Integer, DocVec>(1000);
 		//Need to separate construct() and object constructor
 		//construct();
 		//writeLookupTable();
@@ -31,13 +34,19 @@ public class InvertedList {
 			docs = jp.read("./src/main/resources/shakespeare-scenes.json");
 		}catch(IOException e) {
 			e.printStackTrace();
+			return;
 		}
 		numDoc = docs.size();
 		for(FullDoc d : docs) {
 			String[] tokens = d.getText().split("\\s+");
+			String pid = d.getPlayId(), sid = d.getSceneId(); int docId = d.getDocId();
+			DocVec dv = new DocVec(docId);
+			docId2DocVec.put(docId, dv);
+			
 			int count = 0;
 			for(String t : tokens) {
 				if(t.length()==0) continue;
+				dv.add(t);
 				count++;
 				if(!terms.containsKey(t))
 					terms.put(t, new PostingList());
@@ -45,7 +54,6 @@ public class InvertedList {
 				numTokens++;
 			}
 			
-			String pid = d.getPlayId(), sid = d.getSceneId(); int docId = d.getDocId();
 			if(!playId2DocId.containsKey(pid)) {
 				playId2DocId.put(pid, new ArrayList<Integer>());
 			}
@@ -102,6 +110,7 @@ public class InvertedList {
 		jp.write(this);
 		jp.writeDocId2DocStat(docId2DocStat);
 		jp.writePlayId2DocId(playId2DocId);
+		jp.writeDocId2DocVec(docId2DocVec);
 	}
 	
 	public void writeToFile() {
